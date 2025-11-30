@@ -1,0 +1,86 @@
+services:
+  php:
+    build:
+      context: .
+      dockerfile: ./docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: taskflow-backend
+    restart: unless-stopped
+
+    working_dir: /var/www/project
+    networks:
+      - taskflow-network
+    volumes:
+      - .:/var/www/project:cached
+      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/custom.ini:ro
+      - ./docker/php/xdebug.ini:/usr/local/etc/php/conf.d/xdebug.ini
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf
+    environment:
+      APP_ENV: ${APP_ENV:-dev}
+      COMPOSER_ALLOW_SUPERUSER: 1
+      PHP_IDE_CONFIG: 'serverName=localhost'
+    depends_on:
+      - database
+
+
+
+  web:
+    image: caddy:alpine
+    container_name: taskflow-server
+    restart: always
+    ports:
+      - "5020:80"
+      - "5021:443"
+    volumes:
+      - ./:/var/www/project:ro
+      - ./docker/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+      - ./logs/caddy:/var/log/caddy
+    networks:
+      - taskflow-network
+    depends_on:
+      - php
+
+
+
+  database:
+    image: postgres:${POSTGRES_VERSION:-17}-alpine
+    container_name: taskflow-database
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    networks:
+      - taskflow-network
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}" ]
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    volumes:
+      - database-data:/var/lib/postgresql/data:rw
+
+
+  adminer:
+    image: adminer:5
+    container_name: taskflow-dbpanel
+    restart: unless-stopped
+    ports:
+      - "5022:8080"
+    networks:
+      - taskflow-network
+
+volumes:
+  database-data:
+  caddy-data:
+  caddy-config:
+
+networks:
+  taskflow-network:
+    driver: bridge

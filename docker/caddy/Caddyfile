@@ -1,0 +1,19 @@
+{
+  auto_https off
+  admin off
+}
+
+:80 {
+  root * /var/www/project/public
+  encode gzip
+
+  try_files {path} /index.php{path}
+
+  php_fastcgi php:9000
+  file_server
+
+  log {
+    output file /var/log/caddy/access.log
+    format console
+  }
+}
