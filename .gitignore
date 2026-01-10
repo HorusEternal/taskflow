@@ -9,5 +9,10 @@
 /vendor/
 ###< symfony/framework-bundle ###
 .idea
-/logs/*
+/logs/**/*
 taskflow.http
+
+###> phpunit/phpunit ###
+/phpunit.xml
+/.phpunit.cache/
+###< phpunit/phpunit ###

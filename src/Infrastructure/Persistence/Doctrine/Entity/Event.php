@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Entity;
+namespace App\Infrastructure\Persistence\Doctrine\Entity;
 
 use App\Repository\EventRepository;
 use Doctrine\DBAL\Types\Types;
@@ -11,8 +11,9 @@ use Symfony\Bridge\Doctrine\IdGenerator\UlidGenerator;
 class Event
 {
     #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column(type: Types::GUID)]
+    #[ORM\GeneratedValue(strategy: "CUSTOM")]
+    #[ORM\Column(type: Types::GUID, unique: true)]
+    #[ORM\CustomIdGenerator(class: UlidGenerator::class)]
     private string $id;
 
     #[ORM\Column(type: Types::GUID)]
@@ -36,8 +37,26 @@ class Event
     #[ORM\Column]
     private \DateTimeImmutable $createdAt;
 
+    public function __construct(
+        string              $aggregateId,
+        string              $aggregateType,
+        string              $eventType,
+        array               $payload,
+        int                 $version,
+        array               $metadata = [],
+        ?\DateTimeImmutable $createdAt = null
+    )
+    {
+        $this->aggregateId = $aggregateId;
+        $this->aggregateType = $aggregateType;
+        $this->eventType = $eventType;
+        $this->payload = $payload;
+        $this->version = $version;
+        $this->metadata = $metadata;
+        $this->createdAt = $createdAt ?? new \DateTimeImmutable();
+    }
 
-    public function getId(): ?int
+    public function getId(): string
     {
         return $this->id;
     }
@@ -54,82 +73,41 @@ class Event
         return $this->aggregateId;
     }
 
-    public function setAggregateId(string $aggregateId): static
-    {
-        $this->aggregateId = $aggregateId;
-
-        return $this;
-    }
 
     public function getAggregateType(): ?string
     {
         return $this->aggregateType;
     }
 
-    public function setAggregateType(string $aggregateType): static
-    {
-        $this->aggregateType = $aggregateType;
-
-        return $this;
-    }
 
     public function getEventType(): ?string
     {
         return $this->eventType;
     }
 
-    public function setEventType(string $eventType): static
-    {
-        $this->eventType = $eventType;
-
-        return $this;
-    }
 
     public function getPayload(): array
     {
         return $this->payload;
     }
 
-    public function setPayload(array $payload): static
-    {
-        $this->payload = $payload;
-
-        return $this;
-    }
 
     public function getMetadata(): array
     {
         return $this->metadata;
     }
 
-    public function setMetadata(array $metadata): static
-    {
-        $this->metadata = $metadata;
-
-        return $this;
-    }
 
     public function getVersion(): int
     {
         return $this->version;
     }
 
-    public function setVersion(int $version): static
-    {
-        $this->version = $version;
-
-        return $this;
-    }
 
     public function getCreatedAt(): \DateTimeImmutable
     {
         return $this->createdAt;
     }
 
-    public function setCreatedAt(\DateTimeImmutable $createdAt): static
-    {
-        $this->createdAt = $createdAt;
 
-        return $this;
-    }
 }

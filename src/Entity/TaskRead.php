@@ -2,7 +2,7 @@
 
 namespace App\Entity;
 
-use App\Enums\TaskStatusEnum;
+use App\Domain\Task\Enum\TaskStatus;
 use App\Repository\TaskReadRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -21,8 +21,8 @@ class TaskRead
     #[ORM\Column(type: Types::TEXT, nullable: true)]
     private ?string $description = null;
 
-    #[ORM\Column(enumType: TaskStatusEnum::class)]
-    private TaskStatusEnum $status = TaskStatusEnum::Open;
+    #[ORM\Column(enumType: TaskStatus::class)]
+    private TaskStatus $status = TaskStatus::OPEN;
 
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $skillKey = null;
@@ -80,12 +80,12 @@ class TaskRead
         return $this;
     }
 
-    public function getStatus(): ?TaskStatusEnum
+    public function getStatus(): ?TaskStatus
     {
         return $this->status;
     }
 
-    public function setStatus(TaskStatusEnum $status): static
+    public function setStatus(TaskStatus $status): static
     {
         $this->status = $status;
 
